@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404, get_list_or_404
 from django.contrib.auth.decorators import login_required
 from . import models
 from django.utils import timezone
@@ -6,7 +6,8 @@ from django.utils import timezone
 # Create your views here.
 
 def home(request):
-    return render(request, 'products/home.html' )
+    products = models.Product.objects
+    return render(request, 'products/home.html', {"products": products } )
 
 @login_required
 def create(request):
@@ -37,10 +38,20 @@ def create(request):
 
             #Save
             product.save()
-            return redirect('home')
+            #print(redirect('detail/' + str(product.id)))
+            return redirect('/products/' + str(product.id))
         else:
             return render(request, 'products/create.html', {'error': 'faltan campos'})  
             
     else:
         return render(request, 'products/create.html')
-            
+
+def detail(request, product_id):
+    product = get_object_or_404(models.Product, pk=product_id)
+    return render(request, 'products/detail.html', {'product': product})
+
+def upvote(request, product_id):
+    product = get_object_or_404(models.Product, pk=product_id)
+    product.votes_total +=1
+    product.save()
+    return render(request, 'products/detail.html', {'product': product})
